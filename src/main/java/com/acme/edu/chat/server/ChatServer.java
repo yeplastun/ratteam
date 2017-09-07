@@ -87,6 +87,7 @@ public class ChatServer {
                 sendHistory(outputStream);
                 break;
             case CHANGEID:
+                msg = tempMsg.getText();
                 clientSockets.put(clientSocket, msg);
                 break;
             default:
