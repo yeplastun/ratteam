@@ -42,10 +42,10 @@ public class Message {
 
     private String getFormattingUsername() {
         if (username == "") {
-            return "";
+            return "Anonymous:    ";
         }
 
-        return username + " ";
+        return username + ":    ";
     }
 
     String getFormattingMessage() {
@@ -58,5 +58,9 @@ public class Message {
 
     MessageType getTypeCommand() {
         return typeCommand;
+    }
+
+    public String getText() {
+        return text;
     }
 }
