@@ -33,7 +33,7 @@ public class ChatServer {
                     executorService.submit(processSocket(clientSocket));
                 }
             });
-        } catch (IOException e) {
+        } finally {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
