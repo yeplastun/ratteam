@@ -28,7 +28,8 @@ public class ChatSender implements Runnable {
                     continue;
                 }
                 if (!(message.startsWith(SEND_COMMAND) || message.startsWith(HISTORY_COMMAND))) {
-                    System.out.println("Error: message should start with /snd or /hist");
+                    System.out.println("Error: message should start with " +
+                            SEND_COMMAND + " or " + HISTORY_COMMAND);
                     message = consoleInput.readLine().trim();
                     continue;
                 }
