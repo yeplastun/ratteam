@@ -1,12 +1,12 @@
 package com.acme.edu.chat.client;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
 
 public class Receiver implements Runnable {
-    BufferedReader input;
+    private DataInputStream input;
 
-    public Receiver(BufferedReader input) {
+    public Receiver(DataInputStream input) {
         this.input = input;
     }
 
@@ -14,9 +14,8 @@ public class Receiver implements Runnable {
     public void run() {
         while (true) {
             try {
-                System.out.println(input.readLine());
+                System.out.println(input.readUTF());
             } catch (IOException e) {
-//                throw new Exception(e);
                 e.printStackTrace();
             }
         }
