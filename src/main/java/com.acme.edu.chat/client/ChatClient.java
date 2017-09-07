@@ -16,9 +16,17 @@ public class ChatClient {
     }
 
     public void startChat() {
+        new Thread(new Receiver(input)).start();
+        BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
 
+        while (true) {
+            try {
+                output.write(consoleInput.readLine());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
-
 
     public static void main(String[] args) {
         try (
