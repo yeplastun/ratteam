@@ -1,12 +1,18 @@
 package com.acme.edu.chat.server;
 
+import com.google.gson.Gson;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
-import static com.acme.edu.chat.Commands.*;
+import static com.acme.edu.chat.Commands.HISTORY_COMMAND;
+import static com.acme.edu.chat.Commands.SEND_COMMAND;
 
 public class Message {
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static Gson gson = new Gson();
+
 
     private String time;
     private String text;
@@ -39,13 +45,8 @@ public class Message {
     public String getTime() {
         return time;
     }
-
-    private String getFormattingUsername() {
-        if (username == "") {
-            return "Anonymous:    ";
-        }
-
-        return username + ":    ";
+    public static Message fromString(String message) {
+        return gson.fromJson(message, Message.class);
     }
 
     String getFormattingMessage() {
@@ -55,12 +56,21 @@ public class Message {
     public void setText(String text) {
         this.text = text;
     }
+    private String getFormattingUsername() {
+        if (Objects.equals(username, "")) {
+            return "Anonymous:    ";
+        }
 
+        return username + ":    ";
+    }
     MessageType getTypeCommand() {
         return typeCommand;
     }
-
     public String getText() {
         return text;
+    }
+    @Override
+    public String toString() {
+        return gson.toJson(this);
     }
 }
