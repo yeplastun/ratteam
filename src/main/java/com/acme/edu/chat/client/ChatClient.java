@@ -27,7 +27,7 @@ class ChatClient {
             receiver.start();
             new ChatSender(output, consoleInput).run();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Failed to connect to server");
         }
     }
 }
