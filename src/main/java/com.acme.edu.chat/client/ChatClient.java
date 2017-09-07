@@ -45,8 +45,6 @@ public class ChatClient {
             ChatClient client = new ChatClient(socket, output, input);
             client.startChat();
 
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

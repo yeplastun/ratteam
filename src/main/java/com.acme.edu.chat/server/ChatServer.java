@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.lineSeparator;
+
 public class ChatServer {
     private static ConcurrentLinkedQueue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -26,53 +28,59 @@ public class ChatServer {
             while (true) {
                 final Socket clientSocket = serverSocket.accept();
                 clientSockets.add(clientSocket);
-                executorService.submit(acceptMessage(clientSocket));
+                executorService.submit(processSocket(clientSocket));
             }
         });
     }
 
     @NotNull
-    private static Runnable acceptMessage(Socket clientSocket) {
+    private static Runnable processSocket(Socket clientSocket) {
         return () -> {
-            try (
-                    BufferedWriter outputStream = new BufferedWriter(
-                            new OutputStreamWriter(clientSocket.getOutputStream()));
-                    BufferedReader inputStream = new BufferedReader(
-                            new InputStreamReader(clientSocket.getInputStream()))
-            ) {
-                String msg = inputStream.readLine();
+            {
+                try (
+                        BufferedWriter outputStream = new BufferedWriter(
+                                new OutputStreamWriter(clientSocket.getOutputStream())
+                        );
+                        BufferedReader inputStream = new BufferedReader(
+                                new InputStreamReader(clientSocket.getInputStream())
+                        )
+                ) {
+                    while (true) {
+                        String msg = inputStream.readLine();
+                        System.out.println(msg);
+                        if (msg.startsWith("/snd")) {
+                            // handle str
+                            msg = LocalDateTime.now() + "\t" + msg;
+                            history.add(msg);
 
-                if (msg.startsWith("/snd")) {
-                    // handle str
-                    msg = LocalDateTime.now() + "\t" + msg;
-                    history.add(msg);
-
-                    String finalMsg = msg;
-                    executorService.submit(() -> {
-                        clientSockets.forEach(socket -> {
-                            try {
-                                new BufferedWriter(
-                                        new OutputStreamWriter(socket.getOutputStream())
-                                ).write(finalMsg);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                    });
-                } else if (msg.startsWith("/hist")) {
-                    history.forEach(message -> {
-                        try {
-                            outputStream.write(message);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                            String finalMsg = msg;
+                            executorService.submit(() -> {
+                                clientSockets.forEach(socket -> {
+                                    try {
+                                        new BufferedWriter(
+                                                new OutputStreamWriter(socket.getOutputStream())
+                                        ).write(finalMsg);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            });
+                        } else if (msg.startsWith("/hist")) {
+                            history.forEach(message -> {
+                                try {
+                                    outputStream.write(message);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                        } else {
+                            outputStream.write("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111" + lineSeparator());
+                            outputStream.newLine();
                         }
-                    });
-                } else {
-                    outputStream.write("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111");
-                    outputStream.newLine();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         };
     }
