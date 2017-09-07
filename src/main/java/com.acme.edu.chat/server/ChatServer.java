@@ -2,11 +2,9 @@ package com.acme.edu.chat.server;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDateTime;
@@ -38,15 +36,11 @@ public class ChatServer {
         return () -> {
             {
                 try (
-                        BufferedWriter outputStream = new BufferedWriter(
-                                new OutputStreamWriter(clientSocket.getOutputStream())
-                        );
-                        BufferedReader inputStream = new BufferedReader(
-                                new InputStreamReader(clientSocket.getInputStream())
-                        )
+                        DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
+                        DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())
                 ) {
                     while (true) {
-                        String msg = inputStream.readLine();
+                        String msg = inputStream.readUTF();
                         System.out.println(msg);
                         if (msg.startsWith("/snd")) {
                             // handle str
@@ -57,9 +51,7 @@ public class ChatServer {
                             executorService.submit(() -> {
                                 clientSockets.forEach(socket -> {
                                     try {
-                                        new BufferedWriter(
-                                                new OutputStreamWriter(socket.getOutputStream())
-                                        ).write(finalMsg);
+                                        new DataOutputStream(socket.getOutputStream()).writeUTF(finalMsg);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -68,14 +60,13 @@ public class ChatServer {
                         } else if (msg.startsWith("/hist")) {
                             history.forEach(message -> {
                                 try {
-                                    outputStream.write(message);
+                                    outputStream.writeUTF(message);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
                             });
                         } else {
-                            outputStream.write("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111" + lineSeparator());
-                            outputStream.newLine();
+                            outputStream.writeUTF("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111" + lineSeparator());
                         }
                     }
                 } catch (IOException e) {
