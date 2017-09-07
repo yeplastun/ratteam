@@ -22,6 +22,8 @@ public class ChatClient {
         while (true) {
             try {
                 output.write(consoleInput.readLine());
+                output.newLine();
+                //System.out.println(consoleInput.readLine());
             } catch (IOException e) {
                 e.printStackTrace();
             }

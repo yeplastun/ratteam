@@ -69,6 +69,7 @@ public class ChatServer {
                     });
                 } else {
                     outputStream.write("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111");
+                    outputStream.newLine();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
