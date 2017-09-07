@@ -20,13 +20,15 @@ public class ChatSender implements Runnable {
     public void run() {
         try {
             String message = consoleInput.readLine().trim();
-            while (message.startsWith("/exit") || message.startsWith("/quit")) {
+            while (!message.startsWith("/exit") || !message.startsWith("/quit")) {
                 if (message.length() > 150) {
                     System.out.println("Error: message should be shorter than 150 symbols.");
+                    message = consoleInput.readLine().trim();
                     continue;
                 }
                 if (!(message.startsWith("/snd") || message.startsWith("/hist"))) {
                     System.out.println("Error: message should start with /snd or /hist");
+                    message = consoleInput.readLine().trim();
                     continue;
                 }
                 outputStream.writeUTF(message);
