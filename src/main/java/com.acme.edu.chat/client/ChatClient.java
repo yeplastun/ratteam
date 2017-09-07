@@ -8,8 +8,8 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class ChatClient {
-    String host;
-    Integer port;
+    private String host;
+    private Integer port;
 
     public ChatClient(String host, Integer port) {
         this.host = host;
@@ -27,6 +27,11 @@ public class ChatClient {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        ChatClient client = new ChatClient("127.0.0.1", 6666);
+        client.startChat();
     }
 
 }
