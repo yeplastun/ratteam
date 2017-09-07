@@ -24,13 +24,11 @@ public class ChatServer {
         try {
             serverSocket = new ServerSocket(6666);
             ServerSocket finalServerSocket = serverSocket;
-            executorService.submit(() -> {
                 while (true) {
                     final Socket clientSocket = finalServerSocket.accept();
                     clientSockets.add(clientSocket);
                     executorService.submit(processSocket(clientSocket));
                 }
-            });
         } finally {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
