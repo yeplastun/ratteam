@@ -22,7 +22,9 @@ public class ChatClient {
              DataInputStream input = new DataInputStream(socket.getInputStream());
              BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in))
         ) {
-            new Thread(new ChatReceiver(input)).start();
+            Thread receiver = new Thread(new ChatReceiver(input));
+            receiver.setDaemon(true);
+            receiver.start();
             new ChatSender(output, consoleInput).run();
         } catch (IOException e) {
             e.printStackTrace();
