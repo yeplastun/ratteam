@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 
+import static com.acme.edu.chat.Commands.*;
+
 public class ChatServer {
     private static Object monitorHistory = new Object();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -68,8 +70,8 @@ public class ChatServer {
     }
 
     private static void commandMessageHandler(DataOutputStream outputStream, String msg) throws IOException {
-        if (!msg.startsWith("/snd") && msg.startsWith("/hist") && !msg.startsWith("")) {
-            outputStream.writeUTF("== Invalid Command ==");
+        if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
+            outputStream.writeUTF(INVALID_COMMAND);
             return;
         }
 
@@ -83,7 +85,7 @@ public class ChatServer {
                 sendHistory(outputStream);
                 break;
             default:
-                outputStream.writeUTF("== Invalid Command ==");
+                outputStream.writeUTF(INVALID_COMMAND);
         }
     }
 

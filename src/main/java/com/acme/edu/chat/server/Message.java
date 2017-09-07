@@ -3,6 +3,8 @@ package com.acme.edu.chat.server;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static com.acme.edu.chat.Commands.*;
+
 public class Message {
     private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -11,10 +13,10 @@ public class Message {
 
     private MessageType typeCommand;
 
-    public Message(String msg) {
-        if (msg.startsWith("/hist")) {
+    Message(String msg) {
+        if (msg.startsWith(HISTORY_COMMAND)) {
             this.typeCommand = MessageType.HISTORY;
-        } else if (msg.startsWith("/snd")){
+        } else if (msg.startsWith(SEND_COMMAND)){
             this.typeCommand = MessageType.SEND;
         }
 
@@ -26,7 +28,7 @@ public class Message {
         return time;
     }
 
-    public String getFormattingMessage() {
+    String getFormattingMessage() {
         return time + "\t" + text;
     }
 
@@ -34,7 +36,7 @@ public class Message {
         this.text = text;
     }
 
-    public MessageType getTypeCommand() {
+    MessageType getTypeCommand() {
         return typeCommand;
     }
 }
