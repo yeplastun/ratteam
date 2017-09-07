@@ -4,10 +4,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -19,18 +22,26 @@ public class ChatServer {
     private static Queue<String> history = new ConcurrentLinkedQueue<>();
 
     public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(6666);
-        executorService.submit(() -> {
-            while (true) {
-                final Socket clientSocket = serverSocket.accept();
-                clientSockets.add(clientSocket);
-                executorService.submit(processSocket(clientSocket));
+        ServerSocket serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(6666);
+            ServerSocket finalServerSocket = serverSocket;
+            executorService.submit(() -> {
+                while (true) {
+                    final Socket clientSocket = finalServerSocket.accept();
+                    clientSockets.add(clientSocket);
+                    executorService.submit(processSocket(clientSocket));
+                }
+            });
+        } catch (IOException e) {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
             }
-        });
+        }
     }
 
     @NotNull
-    private static Runnable processSocket(Socket clientSocket) {
+    private static Runnable processSocket(Socket clientSocket) throws IOException {
         return () -> {
             {
                 try (
@@ -42,7 +53,8 @@ public class ChatServer {
                         System.out.println(msg);
                         if (msg.startsWith("/snd")) {
                             // handle str
-                            msg = LocalDateTime.now() + "\t" + msg;
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            msg = LocalDateTime.now().format(formatter) + "\t" + msg.substring(msg.indexOf(' ') + 1);
                             history.add(msg);
 
                             String finalMsg = msg;
@@ -65,6 +77,16 @@ public class ChatServer {
                             outputStream.writeUTF("== Invalid Command ==");
                         }
                     }
+                } catch (EOFException e) {
+
+                } catch (SocketException e) {
+                    clientSockets.forEach(socket -> {
+                        try {
+                            socket.close();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
