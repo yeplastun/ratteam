@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChatServer {
-    private static ConcurrentLinkedQueue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
+    private static Queue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
     private static Queue<String> history = new ConcurrentLinkedQueue<>();
 
