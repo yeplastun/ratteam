@@ -8,16 +8,15 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.*;
 
 public class ChatServer {
     private static Object monitorHistory = new Object();
-    private static Queue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     private static List<Message> history = null;
     private static ConcurrentHashMap<Socket, DataOutputStream> dataOutStr = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Socket, String> clientSockets = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
@@ -28,7 +27,7 @@ public class ChatServer {
             ServerSocket finalServerSocket = serverSocket;
             while (true) {
                 final Socket clientSocket = finalServerSocket.accept();
-                clientSockets.add(clientSocket);
+                clientSockets.put(clientSocket, "");
                 executorService.submit(processSocket(clientSocket));
             }
         } finally {
@@ -94,7 +93,7 @@ public class ChatServer {
         }
 
         final String finalMsg = msg;
-        executorService.submit(() -> clientSockets.forEach(socket -> {
+        executorService.submit(() -> clientSockets.keySet().forEach(socket -> {
             try {
                 dataOutStr.get(socket).writeUTF(finalMsg);
             } catch (IOException e) {
