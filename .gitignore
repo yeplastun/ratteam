@@ -6,6 +6,6 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
-javajunior.iml
+ratteam.iml
 .idea
 .DS_Store
