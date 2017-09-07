@@ -29,7 +29,7 @@ public class ChatClient {
                         new InputStreamReader(socket.getInputStream()))
         ) {
             ChatClient client = new ChatClient(socket, output, input);
-
+            client.startChat();
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
