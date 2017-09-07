@@ -46,15 +46,13 @@ public class ChatServer {
                             history.add(msg);
 
                             String finalMsg = msg;
-                            executorService.submit(() -> {
-                                clientSockets.forEach(socket -> {
-                                    try {
-                                        new DataOutputStream(socket.getOutputStream()).writeUTF(finalMsg);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                });
-                            });
+                            executorService.submit(() -> clientSockets.forEach(socket -> {
+                                try {
+                                    new DataOutputStream(socket.getOutputStream()).writeUTF(finalMsg);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }));
                         } else if (msg.startsWith("/hist")) {
                             history.forEach(message -> {
                                 try {
