@@ -56,7 +56,7 @@ public class ChatSenderTest implements SysoutCaptureAndAssertionAbility {
         sender.run();
 
         // Then
-        assertSysoutEquals("Terminated.");
+        assertSysoutEquals("Terminated." + lineSeparator());
     }
 
     @Test
