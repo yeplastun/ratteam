@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 public class ChatServer {
     private static ConcurrentLinkedQueue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private static Queue<String> history = new ConcurrentLinkedQueue<>();
+    private static Queue<Message> history = new ConcurrentLinkedQueue<>();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
@@ -78,8 +78,8 @@ public class ChatServer {
         Message tempMsg = new Message(msg);
         msg = tempMsg.getFormattingMessage();
         switch (tempMsg.getTypeCommand()) {
-            case "/snd":
-                history.add(msg);
+            case SEND:
+                history.add(tempMsg);
                 final String finalMsg = msg;
                 executorService.submit(() -> clientSockets.forEach(socket -> {
                     try {
@@ -89,10 +89,10 @@ public class ChatServer {
                     }
                 }));
                 break;
-            case "/hist":
+            case HISTORY:
                 history.forEach(message -> {
                     try {
-                        outputStream.writeUTF(message);
+                        outputStream.writeUTF(message.getFormattingMessage());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

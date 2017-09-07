@@ -9,13 +9,13 @@ public class Message {
     private String time;
     private String text;
 
-    private String typeCommand;
+    private MessageType typeCommand;
 
     public Message(String msg) {
         if (msg.startsWith("/hist")) {
-            this.typeCommand = "/hist";
-        } else {
-            this.typeCommand = msg.substring(0, msg.indexOf(' '));
+            this.typeCommand = MessageType.HISTORY;
+        } else if (msg.startsWith("/snd")){
+            this.typeCommand = MessageType.SEND;
         }
 
         this.text = msg.substring(msg.indexOf(' ') + 1);
@@ -34,7 +34,7 @@ public class Message {
         this.text = text;
     }
 
-    public String getTypeCommand() {
+    public MessageType getTypeCommand() {
         return typeCommand;
     }
 }
