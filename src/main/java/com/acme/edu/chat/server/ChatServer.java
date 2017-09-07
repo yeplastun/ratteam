@@ -2,33 +2,36 @@ package com.acme.edu.chat.server;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.*;
+
+import static com.acme.edu.chat.Commands.*;
 
 public class ChatServer {
-    private static Queue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
+    private static Object monitorHistory = new Object();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private static Queue<Message> history = new ConcurrentLinkedQueue<>();
+
+    private static List<Message> history = null;
+    private static ConcurrentHashMap<Socket, DataOutputStream> dataOutStr = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Socket, String> clientSockets = new ConcurrentHashMap<>();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         try {
+            history = new LinkedList<>();
+
             serverSocket = new ServerSocket(6666);
             ServerSocket finalServerSocket = serverSocket;
-                while (true) {
-                    final Socket clientSocket = finalServerSocket.accept();
-                    clientSockets.add(clientSocket);
-                    executorService.submit(processSocket(clientSocket));
-                }
+            while (true) {
+                final Socket clientSocket = finalServerSocket.accept();
+                clientSockets.put(clientSocket, "");
+                executorService.submit(processSocket(clientSocket));
+            }
         } finally {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
@@ -45,21 +48,20 @@ public class ChatServer {
                         DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())
                 ) {
                     while (true) {
+                        dataOutStr.put(clientSocket, outputStream);
+
                         String msg = inputStream.readUTF();
                         System.out.println(msg);
 
-                        commandMessageHandler(outputStream, msg);
+                        commandMessageHandler(clientSocket, outputStream, msg);
                     }
-                } catch (EOFException e) {
-                    System.out.println("Connection with someone is lost");
-                } catch (SocketException e) {
-                    clientSockets.forEach(socket -> {
-                        try {
-                            socket.close();
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
-                    });
+                } catch (EOFException | SocketException e) {
+                    try {
+                        clientSocket.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    clientSockets.remove(clientSocket);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -67,37 +69,57 @@ public class ChatServer {
         };
     }
 
-    private static void commandMessageHandler(DataOutputStream outputStream, String msg) throws IOException {
-        if (!msg.startsWith("/snd") && msg.startsWith("/hist") && !msg.startsWith("")) {
-            outputStream.writeUTF("== Invalid Command ==");
+    private static void commandMessageHandler(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
+        if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
+            outputStream.writeUTF(INVALID_COMMAND);
             return;
         }
 
         Message tempMsg = new Message(msg);
+        tempMsg.setUsername(clientSockets.get(clientSocket));
         msg = tempMsg.getFormattingMessage();
+
         switch (tempMsg.getTypeCommand()) {
             case SEND:
-                history.add(tempMsg);
-                final String finalMsg = msg;
-                executorService.submit(() -> clientSockets.forEach(socket -> {
-                    try {
-                        new DataOutputStream(socket.getOutputStream()).writeUTF(finalMsg);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }));
+                broadcastMessage(msg, tempMsg);
                 break;
             case HISTORY:
-                history.forEach(message -> {
-                    try {
-                        outputStream.writeUTF(message.getFormattingMessage());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
+                sendHistory(outputStream);
+                break;
+            case CHANGEID:
+                msg = tempMsg.getText();
+                clientSockets.put(clientSocket, msg);
+
+                outputStream.writeUTF("Your nickname is changed to " + msg);
+
                 break;
             default:
-                outputStream.writeUTF("== Invalid Command ==");
+                outputStream.writeUTF(INVALID_COMMAND);
         }
+    }
+
+    private static void broadcastMessage(String msg, Message tempMsg) {
+        synchronized (monitorHistory) {
+            history.add(tempMsg);
+        }
+
+        final String finalMsg = msg;
+        executorService.submit(() -> clientSockets.keySet().forEach(socket -> {
+            try {
+                dataOutStr.get(socket).writeUTF(finalMsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+    }
+
+    private static synchronized void sendHistory(DataOutputStream outputStream) {
+        history.forEach(message -> {
+            try {
+                outputStream.writeUTF(message.getFormattingMessage());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
