@@ -9,11 +9,10 @@ public class ChatSender implements Runnable {
     private BufferedReader consoleInput;
 
 
-    public ChatSender(DataOutputStream outputStream, BufferedReader consoleInput) {
+    ChatSender(DataOutputStream outputStream, BufferedReader consoleInput) {
         this.outputStream = outputStream;
         this.consoleInput = consoleInput;
     }
-
 
     @Override
     public void run() {

@@ -7,16 +7,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-public class ChatClient {
+class ChatClient {
     private String host;
     private Integer port;
 
-    public ChatClient(String host, Integer port) {
+    ChatClient(String host, Integer port) {
         this.host = host;
         this.port = port;
     }
 
-    public void startChat() {
+    void startChat() {
         try (Socket socket = new Socket(host, port);
              DataOutputStream output = new DataOutputStream(socket.getOutputStream());
              DataInputStream input = new DataInputStream(socket.getInputStream());
