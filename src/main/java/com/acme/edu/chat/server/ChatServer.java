@@ -2,13 +2,17 @@ package com.acme.edu.chat.server;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.acme.edu.chat.Commands.*;
 
@@ -23,7 +27,7 @@ public class ChatServer {
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         try {
-            history = new LinkedList<>();
+            history = HistorySaver.getInstance().loadHistory();
 
             serverSocket = new ServerSocket(6666);
             ServerSocket finalServerSocket = serverSocket;
@@ -101,6 +105,11 @@ public class ChatServer {
     private static void broadcastMessage(String msg, Message tempMsg) {
         synchronized (monitorHistory) {
             history.add(tempMsg);
+            try {
+                HistorySaver.getInstance().addToFile(tempMsg);
+            } catch (IOException e) {
+                System.out.println("Unable to add to file the following message: " + tempMsg);
+            }
         }
 
         final String finalMsg = msg;
