@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.acme.edu.chat.Commands.*;
+
 public class ChatServer {
     private static Queue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -68,8 +70,8 @@ public class ChatServer {
     }
 
     private static void commandMessageHandler(DataOutputStream outputStream, String msg) throws IOException {
-        if (!msg.startsWith("/snd") && msg.startsWith("/hist") && !msg.startsWith("")) {
-            outputStream.writeUTF("== Invalid Command ==");
+        if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
+            outputStream.writeUTF(INVALID_COMMAND);
             return;
         }
 
@@ -97,7 +99,7 @@ public class ChatServer {
                 });
                 break;
             default:
-                outputStream.writeUTF("== Invalid Command ==");
+                outputStream.writeUTF(INVALID_COMMAND);
         }
     }
 }
