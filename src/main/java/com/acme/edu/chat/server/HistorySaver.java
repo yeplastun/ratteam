@@ -2,6 +2,7 @@ package com.acme.edu.chat.server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -10,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.lang.System.lineSeparator;
 
@@ -28,11 +30,16 @@ public class HistorySaver {
                     new OutputStreamWriter(new FileOutputStream(filename))
             );
         } catch (FileNotFoundException e) {
+            try {
+                new File(filename).createNewFile();
+            } catch (IOException e1) {
+                System.out.println("Unable to create history file.");
+            }
             reader = null;
             writer = null;
         }
     }
-    HistorySaver getInstance() {
+    static HistorySaver getInstance() {
         return INSTANCE;
     }
     public synchronized void addToFile(Message message) throws IOException {
@@ -45,18 +52,32 @@ public class HistorySaver {
         writer.flush();
     }
 
-    public List<Message> loadHistory() throws IOException {
-        if (writer != null) {
-            writer = new BufferedWriter(
-                    new OutputStreamWriter(new FileOutputStream(filename))
-            );
-        }
-
+    public List<Message> loadHistory() throws FileNotFoundException {
         List<Message> messages = new LinkedList<>();
 
+        if (writer != null) {
+            try {
+                writer = new BufferedWriter(
+                        new OutputStreamWriter(new FileOutputStream(filename))
+                );
+            } catch (FileNotFoundException ignore) {
+                System.out.println("No history file. Starting with empty history");
+            }
+        }
+
         String message;
-        while ((message = reader.readLine()) != null) {
-            messages.add(Message.fromString(message));
+        try {
+            while ((message = reader.readLine()) != null && Objects.equals(message, "")) {
+                messages.add(Message.fromString(message));
+            }
+        } catch (IOException e) {
+            return messages;
+        }
+
+        if (reader != null) {
+            reader = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(filename))
+            );
         }
 
         return messages;
