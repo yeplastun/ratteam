@@ -89,6 +89,9 @@ public class ChatServer {
             case CHANGEID:
                 msg = tempMsg.getText();
                 clientSockets.put(clientSocket, msg);
+
+                outputStream.writeUTF("Your nickname is changed to " + msg);
+
                 break;
             default:
                 outputStream.writeUTF(INVALID_COMMAND);
