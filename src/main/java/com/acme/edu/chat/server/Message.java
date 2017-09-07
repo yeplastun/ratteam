@@ -10,26 +10,46 @@ public class Message {
 
     private String time;
     private String text;
+    private String username;
 
     private MessageType typeCommand;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     Message(String msg) {
         if (msg.startsWith(HISTORY_COMMAND)) {
             this.typeCommand = MessageType.HISTORY;
         } else if (msg.startsWith(SEND_COMMAND)){
             this.typeCommand = MessageType.SEND;
+        } else if (msg.startsWith("/chid")) {
+            this.typeCommand = MessageType.CHANGEID;
         }
 
         this.text = msg.substring(msg.indexOf(' ') + 1);
         this.time = LocalDateTime.now().format(formatter);
+        this.username = "";
     }
 
     public String getTime() {
         return time;
     }
 
+    private String getFormattingUsername() {
+        if (username == "") {
+            return "";
+        }
+
+        return username + " ";
+    }
+
     String getFormattingMessage() {
-        return time + "\t" + text;
+        return time + " " + getFormattingUsername()+ text;
     }
 
     public void setText(String text) {
