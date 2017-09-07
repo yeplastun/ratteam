@@ -21,18 +21,26 @@ public class ChatServer {
     private static Queue<String> history = new ConcurrentLinkedQueue<>();
 
     public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(6666);
-        executorService.submit(() -> {
-            while (true) {
-                final Socket clientSocket = serverSocket.accept();
-                clientSockets.add(clientSocket);
-                executorService.submit(processSocket(clientSocket));
+        ServerSocket serverSocket = null;
+        try {
+            serverSocket = new ServerSocket(6666);
+            ServerSocket finalServerSocket = serverSocket;
+            executorService.submit(() -> {
+                while (true) {
+                    final Socket clientSocket = finalServerSocket.accept();
+                    clientSockets.add(clientSocket);
+                    executorService.submit(processSocket(clientSocket));
+                }
+            });
+        } catch (IOException e){
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
             }
-        });
+        }
     }
 
     @NotNull
-    private static Runnable processSocket(Socket clientSocket) {
+    private static Runnable processSocket(Socket clientSocket) throws IOException {
         return () -> {
             {
                 try (
@@ -69,7 +77,13 @@ public class ChatServer {
                         }
                     }
                 } catch (SocketException e) {
-
+                    clientSockets.forEach(socket -> {
+                        try {
+                            socket.close();
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                    });
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
