@@ -3,7 +3,6 @@ package com.acme.edu.chat.client;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class ChatSender implements Runnable {
     private DataOutputStream outputStream;
@@ -34,6 +33,7 @@ public class ChatSender implements Runnable {
                 outputStream.writeUTF(message);
                 message = consoleInput.readLine().trim();
             }
+            System.out.println("Terminated.");
         } catch (IOException ex) {
             System.out.println("Error on sending message: " + ex.getMessage());
         }
