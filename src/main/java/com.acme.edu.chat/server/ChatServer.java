@@ -7,7 +7,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +44,8 @@ public class ChatServer {
                         System.out.println(msg);
                         if (msg.startsWith("/snd")) {
                             // handle str
-                            msg = LocalDateTime.now() + "\t" + msg;
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            msg = LocalDateTime.now().format(formatter) + "\t" + msg.substring(msg.indexOf(' ') + 1);
                             history.add(msg);
 
                             String finalMsg = msg;
@@ -67,6 +70,8 @@ public class ChatServer {
                             outputStream.writeUTF("== Invalid Command ==");
                         }
                     }
+                } catch (SocketException e) {
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
