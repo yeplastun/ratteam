@@ -35,7 +35,7 @@ public class ChatSender implements Runnable {
                 outputStream.writeUTF(message);
                 message = consoleInput.readLine().trim();
             }
-            System.out.println("Terminated.");
+            System.out.println("Terminated");
         } catch (IOException ex) {
             System.out.println("Error on sending message: " + ex.getMessage());
         }

@@ -17,7 +17,7 @@ public class ChatReceiver implements Runnable {
                 System.out.println(inputStream.readUTF());
             }
         } catch (IOException e) {
-            System.out.println("Failed to read data from server");
+            System.out.println("No more data from server");
         }
     }
 }
