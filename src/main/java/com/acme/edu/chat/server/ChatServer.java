@@ -53,7 +53,7 @@ public class ChatServer {
                         String msg = inputStream.readUTF();
                         System.out.println(msg);
 
-                        commandMessageHandler(outputStream, msg);
+                        commandMessageHandler(clientSocket, outputStream, msg);
                     }
                 } catch (EOFException | SocketException e) {
                     try {
@@ -69,20 +69,25 @@ public class ChatServer {
         };
     }
 
-    private static void commandMessageHandler(DataOutputStream outputStream, String msg) throws IOException {
+    private static void commandMessageHandler(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
         if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
             outputStream.writeUTF(INVALID_COMMAND);
             return;
         }
 
         Message tempMsg = new Message(msg);
+        tempMsg.setUsername(clientSockets.get(clientSocket));
         msg = tempMsg.getFormattingMessage();
+
         switch (tempMsg.getTypeCommand()) {
             case SEND:
                 broadcastMessage(msg, tempMsg);
                 break;
             case HISTORY:
                 sendHistory(outputStream);
+                break;
+            case CHANGEID:
+                clientSockets.put(clientSocket, msg);
                 break;
             default:
                 outputStream.writeUTF(INVALID_COMMAND);
