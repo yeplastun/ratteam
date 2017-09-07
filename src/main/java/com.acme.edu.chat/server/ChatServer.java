@@ -15,6 +15,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.lineSeparator;
+
 public class ChatServer {
     private static ConcurrentLinkedQueue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -68,7 +70,7 @@ public class ChatServer {
                         }
                     });
                 } else {
-                    outputStream.write("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111");
+                    outputStream.write("Invalid Command!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111" + lineSeparator());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
