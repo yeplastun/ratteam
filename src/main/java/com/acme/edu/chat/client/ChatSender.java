@@ -23,16 +23,20 @@ public class ChatSender implements Runnable {
 
             while (!message.startsWith(EXIT_COMMAND) && !message.startsWith(QUIT_COMMAND)) {
                 if (message.length() > maxMessageLength) {
-                    System.out.println("Error: message should be shorter than 150 symbols.");
+                    System.out.println("Error: message should be shorter than " + maxMessageLength + " symbols");
                     message = consoleInput.readLine().trim();
                     continue;
                 }
-                if (!(message.startsWith(SEND_COMMAND) || message.startsWith(HISTORY_COMMAND))) {
+
+                if (!(message.startsWith(SEND_COMMAND)
+                        || message.startsWith(HISTORY_COMMAND)
+                        || (message.startsWith(CHANGE_ID_COMMAND)))) {
                     System.out.println("Error: message should start with " +
-                            SEND_COMMAND + " or " + HISTORY_COMMAND);
+                            SEND_COMMAND + " or " + HISTORY_COMMAND + " or " + CHANGE_ID_COMMAND);
                     message = consoleInput.readLine().trim();
                     continue;
                 }
+
                 outputStream.writeUTF(message);
                 message = consoleInput.readLine().trim();
             }
