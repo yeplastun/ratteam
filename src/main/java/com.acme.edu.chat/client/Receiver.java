@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 public class Receiver implements Runnable {
-    DataInputStream input;
+    private DataInputStream input;
 
     public Receiver(DataInputStream input) {
         this.input = input;
@@ -16,7 +16,6 @@ public class Receiver implements Runnable {
             try {
                 System.out.println(input.readUTF());
             } catch (IOException e) {
-//                throw new Exception(e);
                 e.printStackTrace();
             }
         }

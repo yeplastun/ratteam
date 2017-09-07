@@ -8,9 +8,9 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class ChatClient {
-    Socket clientSocket;
-    DataOutputStream output;
-    DataInputStream input;
+    private Socket clientSocket;
+    private DataOutputStream output;
+    private DataInputStream input;
 
     public ChatClient(Socket clientSocket, DataOutputStream output, DataInputStream input) {
         this.clientSocket = clientSocket;
