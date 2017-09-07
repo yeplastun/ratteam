@@ -8,39 +8,22 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class ChatClient {
-    Socket clientSocket;
-    DataOutputStream output;
-    DataInputStream input;
+    String host;
+    Integer port;
 
-    public ChatClient(Socket clientSocket, DataOutputStream output, DataInputStream input) {
-        this.clientSocket = clientSocket;
-        this.output = output;
-        this.input = input;
+    public ChatClient(String host, Integer port) {
+        this.host = host;
+        this.port = port;
     }
 
     public void startChat() {
-        new Thread(new Receiver(input)).start();
-        BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in));
-
-        while (true) {
-            try {
-                final String message = consoleInput.readLine();
-                output.writeUTF(message);
-                //System.out.println(consoleInput.readLine());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void main(String[] args) {
-        try (
-                Socket socket = new Socket("127.0.0.1", 6666);
-                DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-                DataInputStream input = new DataInputStream(socket.getInputStream());
+        try (Socket socket = new Socket(host, port);
+             DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+             DataInputStream input = new DataInputStream(socket.getInputStream());
+             BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in))
         ) {
-            ChatClient client = new ChatClient(socket, output, input);
-            client.startChat();
+            new Thread(new ChatReceiver(input)).start();
+            new ChatSender(output, consoleInput).run();
         } catch (IOException e) {
             e.printStackTrace();
         }
