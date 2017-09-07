@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +17,7 @@ import java.util.concurrent.Executors;
 public class ChatServer {
     private static Queue<Socket> clientSockets = new ConcurrentLinkedQueue<>();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private static Queue<String> history = new ConcurrentLinkedQueue<>();
+    private static Queue<Message> history = new ConcurrentLinkedQueue<>();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
@@ -51,34 +49,11 @@ public class ChatServer {
                     while (true) {
                         String msg = inputStream.readUTF();
                         System.out.println(msg);
-                        if (msg.startsWith("/snd")) {
-                            // handle str
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                            msg = LocalDateTime.now().format(formatter) + "\t" + msg.substring(msg.indexOf(' ') + 1);
-                            history.add(msg);
 
-                            String finalMsg = msg;
-                            executorService.submit(() -> clientSockets.forEach(socket -> {
-                                try {
-                                    new DataOutputStream(socket.getOutputStream()).writeUTF(finalMsg);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }));
-                        } else if (msg.startsWith("/hist")) {
-                            history.forEach(message -> {
-                                try {
-                                    outputStream.writeUTF(message);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            });
-                        } else {
-                            outputStream.writeUTF("== Invalid Command ==");
-                        }
+                        commandMessageHandler(outputStream, msg);
                     }
                 } catch (EOFException e) {
-
+                    System.out.println("Connection with someone is lost");
                 } catch (SocketException e) {
                     clientSockets.forEach(socket -> {
                         try {
@@ -92,5 +67,39 @@ public class ChatServer {
                 }
             }
         };
+    }
+
+    private static void commandMessageHandler(DataOutputStream outputStream, String msg) throws IOException {
+        if (!msg.startsWith("/snd") && msg.startsWith("/hist") && !msg.startsWith("")) {
+            outputStream.writeUTF("== Invalid Command ==");
+            return;
+        }
+
+        Message tempMsg = new Message(msg);
+        msg = tempMsg.getFormattingMessage();
+        switch (tempMsg.getTypeCommand()) {
+            case SEND:
+                history.add(tempMsg);
+                final String finalMsg = msg;
+                executorService.submit(() -> clientSockets.forEach(socket -> {
+                    try {
+                        new DataOutputStream(socket.getOutputStream()).writeUTF(finalMsg);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }));
+                break;
+            case HISTORY:
+                history.forEach(message -> {
+                    try {
+                        outputStream.writeUTF(message.getFormattingMessage());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+                break;
+            default:
+                outputStream.writeUTF("== Invalid Command ==");
+        }
     }
 }
