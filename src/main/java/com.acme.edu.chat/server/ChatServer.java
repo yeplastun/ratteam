@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -32,7 +33,7 @@ public class ChatServer {
                     executorService.submit(processSocket(clientSocket));
                 }
             });
-        } catch (IOException e){
+        } catch (IOException e) {
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
@@ -76,6 +77,8 @@ public class ChatServer {
                             outputStream.writeUTF("== Invalid Command ==");
                         }
                     }
+                } catch (EOFException e) {
+
                 } catch (SocketException e) {
                     clientSockets.forEach(socket -> {
                         try {
