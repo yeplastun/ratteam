@@ -4,17 +4,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.acme.edu.chat.Commands.*;
+import static com.acme.edu.chat.Commands.INVALID_COMMAND;
 
 public class ChatServer {
     private final Object historyMonitor = new Object();
@@ -23,11 +21,11 @@ public class ChatServer {
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     private List<Message> history;
-    private ConcurrentHashMap<Socket, DataOutputStream> dataOutStr = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Socket, DataOutputStream> dataOutStreams = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Socket, String> clientSockets = new ConcurrentHashMap<>();
 
     private int port;
-    private HistorySaver saver;
+    private HistorySaver historySaver;
 
     public ChatServer(int port) {
         this.port = port;
@@ -36,9 +34,9 @@ public class ChatServer {
     void start() {
         try (
                 HistorySaver saver = new HistorySaver();
-                ServerSocket serverSocket = new ServerSocket(port);
+                ServerSocket serverSocket = new ServerSocket(port)
         ) {
-            this.saver = saver;
+            this.historySaver = saver;
             history = saver.loadHistory();
             while (true) {
                 final Socket clientSocket = serverSocket.accept();
@@ -46,12 +44,12 @@ public class ChatServer {
                 executorService.submit(processSocket(clientSocket));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server socket exception: " + e.getMessage());
         }
     }
 
     @NotNull
-    private Runnable processSocket(Socket clientSocket) throws IOException {
+    private Runnable processSocket(Socket clientSocket) {
         return () -> {
             {
                 try (
@@ -59,71 +57,60 @@ public class ChatServer {
                         DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream())
                 ) {
                     while (true) {
-                        dataOutStr.put(clientSocket, outputStream);
+                        dataOutStreams.put(clientSocket, outputStream);
 
                         String msg = inputStream.readUTF();
                         System.out.println(msg);
 
                         handleCommand(clientSocket, outputStream, msg);
                     }
-                } catch (EOFException | SocketException e) {
+                } catch (IOException ex) {
                     try {
                         clientSocket.close();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
+                    } catch (IOException exx) {
+                        System.out.println("Can't close client socket");
                     }
-                    dataOutStr.remove(clientSocket);
+                } finally {
+                    dataOutStreams.remove(clientSocket);
                     clientSockets.remove(clientSocket);
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         };
     }
 
-    private void handleCommand(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
-        if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
-            outputStream.writeUTF(INVALID_COMMAND);
-            return;
-        }
+    private void handleCommand(Socket clientSocket, DataOutputStream outputStream, String rawMessage) throws IOException {
+        Message message = new Message(rawMessage);
+        message.setUsername(clientSockets.get(clientSocket));
 
-        Message tempMsg = new Message(msg);
-        tempMsg.setUsername(clientSockets.get(clientSocket));
-        msg = tempMsg.getFormattingMessage();
-
-        switch (tempMsg.getTypeCommand()) {
+        switch (message.getTypeCommand()) {
             case SEND:
-                broadcastMessageAndSaveToHistory(msg, tempMsg);
+                broadcastMessageAndSaveToHistory(message);
                 break;
             case HISTORY:
                 sendHistory(outputStream);
                 break;
             case CHANGEID:
-                msg = tempMsg.getText();
-                clientSockets.put(clientSocket, msg);
-
-                outputStream.writeUTF("Your nickname is changed to " + msg);
-
+                String id = message.getText();
+                clientSockets.put(clientSocket, id);
+                outputStream.writeUTF("Your nickname is changed to " + id);
                 break;
             default:
                 outputStream.writeUTF(INVALID_COMMAND);
         }
     }
 
-    private void broadcastMessageAndSaveToHistory(String msg, Message tempMsg) {
+    private void broadcastMessageAndSaveToHistory(Message tempMessage) {
         synchronized (historyMonitor) {
-            history.add(tempMsg);
-            saver.addToFile(tempMsg);
+            history.add(tempMessage);
+            historySaver.addToFile(tempMessage);
         }
-
-        final String finalMsg = msg;
 
         synchronized (broadcastMonitor) {
             clientSockets.keySet().forEach(socket -> {
                 try {
-                    dataOutStr.get(socket).writeUTF(finalMsg);
+                    dataOutStreams.get(socket).writeUTF(tempMessage.getFormattedMessage());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.out.println("Can't write to client outputstream");
                 }
             });
         }
@@ -133,7 +120,7 @@ public class ChatServer {
         synchronized (historyMonitor) {
             history.forEach(message -> {
                 try {
-                    outputStream.writeUTF(message.getFormattingMessage());
+                    outputStream.writeUTF(message.getFormattedMessage());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
