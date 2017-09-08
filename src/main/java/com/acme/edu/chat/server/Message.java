@@ -45,7 +45,8 @@ public class Message {
     public String getTime() {
         return time;
     }
-    public static Message fromString(String message) {
+
+    static Message transformStringToMessage(String message) {
         return gson.fromJson(message, Message.class);
     }
 
