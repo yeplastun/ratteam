@@ -1,6 +1,12 @@
 package com.acme.edu.chat.server;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -8,13 +14,12 @@ import static java.lang.System.lineSeparator;
 
 class HistorySaver implements Closeable {
 
-    private static final HistorySaver INSTANCE = new HistorySaver();
     private static final String filename = "history.txt";
 
     private BufferedReader reader;
     private BufferedWriter writer;
 
-    private HistorySaver() {
+    public HistorySaver() {
         final File file = new File(filename);
 
         if (!file.exists()) {
@@ -34,14 +39,9 @@ class HistorySaver implements Closeable {
         }
     }
 
-    static HistorySaver getInstance() {
-        return INSTANCE;
-    }
-
     void addToFile(Message message) {
         try {
             writer.append(message.toString()).append(lineSeparator());
-//            writer.write(message.toString() + lineSeparator());
             writer.flush();
         } catch (IOException e) {
             System.out.println("Can't write to file " + filename);
@@ -65,9 +65,12 @@ class HistorySaver implements Closeable {
     @Override
     public void close() {
         try {
-            reader.close();
-            writer.close();
-
+            if (reader != null) {
+                reader.close();
+            }
+            if (writer != null) {
+                writer.close();
+            }
         } catch (IOException e) {
             System.out.println("Can't close buffered reader and writer");
         }

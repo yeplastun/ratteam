@@ -24,8 +24,8 @@ public class Message {
         return username;
     }
 
-    void setUsername(String username) {
-        this.username = username;
+    static Message transformStringToMessage(String message) {
+        return gson.fromJson(message, Message.class);
     }
 
     Message(String msg) {
@@ -45,9 +45,8 @@ public class Message {
     public String getTime() {
         return time;
     }
-
-    static Message transformStringToMessage(String message) {
-        return gson.fromJson(message, Message.class);
+    void setUsername(String username) {
+        this.username = username;
     }
 
     String getFormattingMessage() {
