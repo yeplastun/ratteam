@@ -32,8 +32,11 @@ class ChatClient {
              DataInputStream input = new DataInputStream(socket.getInputStream());
              BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in))
         ) {
-            System.out.println("Enter your nickname with command " + CHANGE_ID_COMMAND);
-            String nickname = consoleInput.readLine();
+            String nickname = "";
+            while (!nickname.startsWith(CHANGE_ID_COMMAND)) {
+                System.out.println("Enter your nickname with command " + CHANGE_ID_COMMAND);
+                nickname = consoleInput.readLine();
+            }
             output.writeUTF(nickname);
 
             Thread receiver = new Thread(new ChatReceiver(input, printerOutput));

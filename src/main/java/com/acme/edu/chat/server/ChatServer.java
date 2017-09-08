@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -17,34 +18,38 @@ import java.util.concurrent.Executors;
 import static com.acme.edu.chat.Commands.*;
 
 public class ChatServer {
-    private static final Object historyMonitor = new Object();
-    private static ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final Object historyMonitor = new Object();
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-    private static List<Message> history = null;
-    private static ConcurrentHashMap<Socket, DataOutputStream> dataOutStr = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<Socket, String> clientSockets = new ConcurrentHashMap<>();
+    private List<Message> history = new LinkedList<>();
+    private ConcurrentHashMap<Socket, DataOutputStream> dataOutStr = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Socket, String> clientSockets = new ConcurrentHashMap<>();
 
-    public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = null;
-        try {
-            history = HistorySaver.getInstance().loadHistory();
+    private int port;
+    private HistorySaver saver;
 
-            serverSocket = new ServerSocket(6666);
-            ServerSocket finalServerSocket = serverSocket;
+    public ChatServer(int port) {
+        this.port = port;
+    }
+
+    public void start() {
+        try (
+                HistorySaver saver = new HistorySaver();
+                ServerSocket serverSocket = new ServerSocket(6666);
+        ) {
+            this.saver = saver;
             while (true) {
-                final Socket clientSocket = finalServerSocket.accept();
+                final Socket clientSocket = serverSocket.accept();
                 clientSockets.put(clientSocket, "");
                 executorService.submit(processSocket(clientSocket));
             }
-        } finally {
-            if (serverSocket != null && !serverSocket.isClosed()) {
-                serverSocket.close();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @NotNull
-    private static Runnable processSocket(Socket clientSocket) throws IOException {
+    private Runnable processSocket(Socket clientSocket) throws IOException {
         return () -> {
             {
                 try (
@@ -73,7 +78,7 @@ public class ChatServer {
         };
     }
 
-    private static void commandMessageHandler(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
+    private void commandMessageHandler(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
         if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
             outputStream.writeUTF(INVALID_COMMAND);
             return;
@@ -102,14 +107,15 @@ public class ChatServer {
         }
     }
 
-    private static void broadcastMessageAndSaveToHistory(String msg, Message tempMsg) {
+    private void broadcastMessageAndSaveToHistory(String msg, Message tempMsg) {
         synchronized (historyMonitor) {
             history.add(tempMsg);
-            try {
-                HistorySaver.getInstance().addToFile(tempMsg);
-            } catch (IOException e) {
-                System.out.println("Unable to add to file the following message: " + tempMsg);
-            }
+            HistorySaver.getInstance().addToFile(tempMsg);
+//            try {
+//                HistorySaver.getInstance().addToFile(tempMsg);
+//            } catch (IOException e) {
+//                System.out.println("Unable to add to file the following message: " + tempMsg);
+//            }
         }
 
         final String finalMsg = msg;
@@ -123,7 +129,7 @@ public class ChatServer {
         });
     }
 
-    private static void sendHistory(DataOutputStream outputStream) {
+    private void sendHistory(DataOutputStream outputStream) {
         synchronized (historyMonitor) {
             history.forEach(message -> {
                 try {
