@@ -14,7 +14,9 @@ public class ChatReceiver implements Runnable {
     public void run() {
         try {
             while (true) {
-                System.out.println(inputStream.readUTF());
+                // System.out.println(inputStream.readUTF());
+                // send to client book
+                String messageToClientBook = inputStream.readUTF();
             }
         } catch (IOException e) {
             System.out.println("No more data from server");
