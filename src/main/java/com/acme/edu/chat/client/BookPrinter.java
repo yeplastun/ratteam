@@ -9,7 +9,7 @@ import java.net.Socket;
 public class BookPrinter {
     private ServerSocket serverSocket;
 
-    private BookPrinter(ServerSocket serverSocket) {
+    public BookPrinter(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
     }
 
