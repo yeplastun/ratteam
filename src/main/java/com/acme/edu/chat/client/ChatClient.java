@@ -19,7 +19,12 @@ class ChatClient {
     }
 
     void startChat() {
-        try (Socket socket = new Socket(host, port);
+        try (
+             Socket printerSocket = new Socket("127.0.0.1", 6668);
+             DataOutputStream printerOutput = new DataOutputStream(printerSocket.getOutputStream());
+             DataInputStream printerInput = new DataInputStream(printerSocket.getInputStream());
+
+             Socket socket = new Socket(host, port);
              DataOutputStream output = new DataOutputStream(socket.getOutputStream());
              DataInputStream input = new DataInputStream(socket.getInputStream());
              BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in))
@@ -28,7 +33,7 @@ class ChatClient {
             String nickname = consoleInput.readLine();
             output.writeUTF(nickname);
 
-            Thread receiver = new Thread(new ChatReceiver(input));
+            Thread receiver = new Thread(new ChatReceiver(input, printerOutput));
             receiver.setDaemon(true);
             receiver.start();
             new ChatSender(output, consoleInput).run();

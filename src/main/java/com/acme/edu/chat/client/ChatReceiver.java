@@ -1,13 +1,17 @@
 package com.acme.edu.chat.client;
 
+import javax.xml.crypto.Data;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class ChatReceiver implements Runnable {
     private DataInputStream inputStream;
+    private DataOutputStream outputStream;
 
-    ChatReceiver(DataInputStream inputStream) {
+    ChatReceiver(DataInputStream inputStream, DataOutputStream outputStream) {
         this.inputStream = inputStream;
+        this.outputStream = outputStream;
     }
 
     @Override
@@ -16,7 +20,7 @@ public class ChatReceiver implements Runnable {
             while (true) {
                 // System.out.println(inputStream.readUTF());
                 // send to client book
-                String messageToClientBook = inputStream.readUTF();
+                outputStream.writeUTF(inputStream.readUTF());
             }
         } catch (IOException e) {
             System.out.println("No more data from server");
