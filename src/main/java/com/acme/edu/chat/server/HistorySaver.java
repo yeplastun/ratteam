@@ -2,6 +2,7 @@ package com.acme.edu.chat.server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,13 +15,12 @@ import java.util.List;
 
 import static java.lang.System.lineSeparator;
 
-public class HistorySaver {
+public class HistorySaver implements Closeable {
 
-    private static final HistorySaver INSTANCE = new HistorySaver();
     private static final String filename = "history.txt";
     private BufferedReader reader;
     private BufferedWriter writer;
-    private HistorySaver() {
+    public HistorySaver() {
         boolean isFileExists = false;
         try {
             final File file = new File(filename);
@@ -45,9 +45,6 @@ public class HistorySaver {
             }
         }
     }
-    static HistorySaver getInstance() {
-        return INSTANCE;
-    }
 
     public void addToFile(Message message) throws IOException {
         if (writer != null) {
@@ -70,5 +67,9 @@ public class HistorySaver {
             }
         }
         return messages;
+    }
+    @Override
+    public void close() throws IOException {
+
     }
 }
