@@ -48,7 +48,6 @@ public class ChatServer {
         }
     }
 
-
     @NotNull
     private Runnable processSocket(Socket clientSocket) throws IOException {
         return () -> {
@@ -111,11 +110,12 @@ public class ChatServer {
     private void broadcastMessageAndSaveToHistory(String msg, Message tempMsg) {
         synchronized (historyMonitor) {
             history.add(tempMsg);
-            try {
-                saver.addToFile(tempMsg);
-            } catch (IOException e) {
-                System.out.println("Unable to add to file the following message: " + tempMsg);
-            }
+            HistorySaver.getInstance().addToFile(tempMsg);
+//            try {
+//                HistorySaver.getInstance().addToFile(tempMsg);
+//            } catch (IOException e) {
+//                System.out.println("Unable to add to file the following message: " + tempMsg);
+//            }
         }
 
         final String finalMsg = msg;
