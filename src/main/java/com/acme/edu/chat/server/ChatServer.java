@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -21,7 +20,7 @@ public class ChatServer {
     private final Object historyMonitor = new Object();
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
-    private List<Message> history = new LinkedList<>();
+    private List<Message> history;
     private ConcurrentHashMap<Socket, DataOutputStream> dataOutStr = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Socket, String> clientSockets = new ConcurrentHashMap<>();
 
@@ -35,9 +34,10 @@ public class ChatServer {
     public void start() {
         try (
                 HistorySaver saver = new HistorySaver();
-                ServerSocket serverSocket = new ServerSocket(6666);
+                ServerSocket serverSocket = new ServerSocket(port);
         ) {
             this.saver = saver;
+            history = saver.loadHistory();
             while (true) {
                 final Socket clientSocket = serverSocket.accept();
                 clientSockets.put(clientSocket, "");
@@ -62,7 +62,7 @@ public class ChatServer {
                         String msg = inputStream.readUTF();
                         System.out.println(msg);
 
-                        commandMessageHandler(clientSocket, outputStream, msg);
+                        handleCommand(clientSocket, outputStream, msg);
                     }
                 } catch (EOFException | SocketException e) {
                     try {
@@ -78,7 +78,7 @@ public class ChatServer {
         };
     }
 
-    private void commandMessageHandler(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
+    private void handleCommand(Socket clientSocket, DataOutputStream outputStream, String msg) throws IOException {
         if (!msg.startsWith(SEND_COMMAND) && msg.startsWith(HISTORY_COMMAND) && !msg.startsWith("")) {
             outputStream.writeUTF(INVALID_COMMAND);
             return;
@@ -110,12 +110,7 @@ public class ChatServer {
     private void broadcastMessageAndSaveToHistory(String msg, Message tempMsg) {
         synchronized (historyMonitor) {
             history.add(tempMsg);
-            HistorySaver.getInstance().addToFile(tempMsg);
-//            try {
-//                HistorySaver.getInstance().addToFile(tempMsg);
-//            } catch (IOException e) {
-//                System.out.println("Unable to add to file the following message: " + tempMsg);
-//            }
+            saver.addToFile(tempMsg);
         }
 
         final String finalMsg = msg;
