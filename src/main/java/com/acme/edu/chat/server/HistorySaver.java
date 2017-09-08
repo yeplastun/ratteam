@@ -22,64 +22,57 @@ public class HistorySaver {
     private BufferedReader reader;
     private BufferedWriter writer;
     private HistorySaver() {
+        boolean fileExists = false;
         try {
+            final File file = new File(filename);
+            fileExists = file.createNewFile();
             reader = new BufferedReader(
                     new InputStreamReader(new FileInputStream(filename))
             );
             writer = new BufferedWriter(
                     new OutputStreamWriter(new FileOutputStream(filename))
             );
-        } catch (FileNotFoundException e) {
-            try {
-                new File(filename).createNewFile();
-            } catch (IOException e1) {
-                System.out.println("Unable to create history file.");
-            }
+            System.out.println("Logging to: " + file.getAbsolutePath());
+        } catch (IOException e) {
             reader = null;
             writer = null;
+            if (fileExists) {
+                System.out.println("Unable to write to created history file.");
+
+            } else {
+                System.out.println("Unable to write to existing history file.");
+            }
         }
     }
     static HistorySaver getInstance() {
         return INSTANCE;
     }
     public synchronized void addToFile(Message message) throws IOException {
-        if (reader != null) {
-            reader = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(filename))
-            );
+        if (writer != null) {
+            writer.write(message.toString() + lineSeparator());
+            writer.flush();
         }
-        writer.write(message.toString() + lineSeparator());
-        writer.flush();
     }
 
     public List<Message> loadHistory() throws FileNotFoundException {
         List<Message> messages = new LinkedList<>();
 
-        if (writer != null) {
-            try {
-                writer = new BufferedWriter(
-                        new OutputStreamWriter(new FileOutputStream(filename))
-                );
-            } catch (FileNotFoundException ignore) {
-                System.out.println("No history file. Starting with empty history");
-            }
-        }
-
-        String message;
-        try {
-            while ((message = reader.readLine()) != null && Objects.equals(message, "")) {
-                messages.add(Message.fromString(message));
-            }
-        } catch (IOException e) {
-            return messages;
-        }
-
         if (reader != null) {
-            reader = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(filename))
-            );
-        }
+            String message;
+            try {
+                while ((message = reader.readLine()) != null && Objects.equals(message, "")) {
+                    messages.add(Message.fromString(message));
+                }
+            } catch (IOException e) {
+                return messages;
+            }
 
+            if (reader != null) {
+                reader = new BufferedReader(
+                        new InputStreamReader(new FileInputStream(filename))
+                );
+            }
+        }
         return messages;
     }
 }
