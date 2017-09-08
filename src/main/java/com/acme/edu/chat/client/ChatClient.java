@@ -29,7 +29,7 @@ class ChatClient {
                 System.out.println("Enter your nickname with command " + CHANGE_ID_COMMAND);
                 nickname = consoleInput.readLine();
             }
-            output.writeUTF(nickname);
+            output.writeUTF(nickname.trim());
 
             Thread receiver = new Thread(new ChatReceiver(input));
             receiver.setDaemon(true);
