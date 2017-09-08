@@ -70,6 +70,7 @@ public class ChatServer {
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
+                    dataOutStr.remove(clientSocket);
                     clientSockets.remove(clientSocket);
                 } catch (IOException e) {
                     e.printStackTrace();
