@@ -9,7 +9,7 @@ import java.net.Socket;
 public class BookPrinter {
     private ServerSocket serverSocket;
 
-    BookPrinter(ServerSocket serverSocket) {
+    private BookPrinter(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
     }
 
@@ -20,21 +20,21 @@ public class BookPrinter {
             BookPrinter bookPrinter = new BookPrinter(currentServerSocket);
             bookPrinter.start();
         } catch (IOException e) {
-
+            System.out.println("Book printer goes wrong! We cant't say <<all right>>!");
         }
     }
 
-    private void start() {
-        try (
-            Socket clientSocket = serverSocket.accept();
-            DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-            DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
-        ) {
-            while(true) {
-                System.out.println(dataInputStream.readUTF());
+    private void start() throws IOException {
+        try (Socket clientSocket = serverSocket.accept()) {
+            try (DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream())) {
+                try (DataOutputStream dataOutputStream = new DataOutputStream(clientSocket.getOutputStream())) {
+                    while (true) {
+                        System.out.println(dataInputStream.readUTF());
+                    }
+                }
             }
-        } catch(IOException e) {
-
+        } catch (IOException e) {
+            throw new IOException(e);
         }
     }
 }
