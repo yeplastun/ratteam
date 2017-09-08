@@ -6,6 +6,7 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
-ratteam.iml
+*.iml
 .idea
 .DS_Store
+history.txt
