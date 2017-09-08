@@ -13,9 +13,7 @@ import java.util.List;
 import static java.lang.System.lineSeparator;
 
 class HistorySaver implements Closeable {
-
     private static final String filename = "history.txt";
-
     private BufferedReader reader;
     private BufferedWriter writer;
 
