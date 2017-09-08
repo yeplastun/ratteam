@@ -9,3 +9,4 @@ buildNumber.properties
 *.iml
 .idea
 .DS_Store
+history.txt
