@@ -18,6 +18,8 @@ import static com.acme.edu.chat.Commands.*;
 
 public class ChatServer {
     private final Object historyMonitor = new Object();
+    private final Object broadcastMonitor = new Object();
+
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     private List<Message> history;
@@ -116,13 +118,15 @@ public class ChatServer {
 
         final String finalMsg = msg;
 
-        clientSockets.keySet().forEach(socket -> {
-            try {
-                dataOutStr.get(socket).writeUTF(finalMsg);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        synchronized (broadcastMonitor) {
+            clientSockets.keySet().forEach(socket -> {
+                try {
+                    dataOutStr.get(socket).writeUTF(finalMsg);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 
     private void sendHistory(DataOutputStream outputStream) {
