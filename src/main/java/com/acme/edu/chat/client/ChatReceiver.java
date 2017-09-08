@@ -18,8 +18,6 @@ public class ChatReceiver implements Runnable {
     public void run() {
         try {
             while (true) {
-                // System.out.println(inputStream.readUTF());
-                // send to client book
                 outputStream.writeUTF(inputStream.readUTF());
             }
         } catch (IOException e) {

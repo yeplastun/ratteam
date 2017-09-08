@@ -19,7 +19,7 @@ class HistorySaver implements Closeable {
     private BufferedReader reader;
     private BufferedWriter writer;
 
-    public HistorySaver() {
+    HistorySaver() {
         final File file = new File(filename);
 
         if (!file.exists()) {

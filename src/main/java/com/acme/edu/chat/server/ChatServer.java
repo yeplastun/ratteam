@@ -31,7 +31,7 @@ public class ChatServer {
         this.port = port;
     }
 
-    public void start() {
+    void start() {
         try (
                 HistorySaver saver = new HistorySaver();
                 ServerSocket serverSocket = new ServerSocket(port);
