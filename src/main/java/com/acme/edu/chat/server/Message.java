@@ -66,7 +66,7 @@ public class Message {
     MessageType getTypeCommand() {
         return typeCommand;
     }
-    public String getText() {
+    String getText() {
         return text;
     }
     @Override

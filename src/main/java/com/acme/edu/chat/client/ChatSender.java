@@ -42,7 +42,7 @@ public class ChatSender implements Runnable {
             }
             System.out.println("Terminated");
         } catch (IOException ex) {
-            System.out.println("Error on sending message: " + ex.getMessage());
+            System.out.println("Error on sending message, server is unavailable");
         }
     }
 }
