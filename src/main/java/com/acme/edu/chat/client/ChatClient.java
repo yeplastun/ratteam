@@ -13,14 +13,17 @@ class ChatClient {
     private String host;
     private Integer port;
 
-    ChatClient(String host, Integer port) {
+    private Integer portToBook;
+
+    ChatClient(String host, Integer port, Integer portToBook) {
         this.host = host;
         this.port = port;
+        this.portToBook = portToBook;
     }
 
     void startChat() {
         try (
-             Socket printerSocket = new Socket("127.0.0.1", 6668);
+             Socket printerSocket = new Socket("127.0.0.1", portToBook);
              DataOutputStream printerOutput = new DataOutputStream(printerSocket.getOutputStream());
              DataInputStream printerInput = new DataInputStream(printerSocket.getInputStream());
 

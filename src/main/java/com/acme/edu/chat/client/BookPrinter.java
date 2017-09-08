@@ -15,7 +15,7 @@ public class BookPrinter {
 
     public static void main(String[] args) {
         try (
-                ServerSocket currentServerSocket = new ServerSocket(6668);
+                ServerSocket currentServerSocket = new ServerSocket(Integer.parseInt(args[0]));
         ) {
             BookPrinter bookPrinter = new BookPrinter(currentServerSocket);
             bookPrinter.start();
