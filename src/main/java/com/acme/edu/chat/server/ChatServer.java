@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import static com.acme.edu.chat.Commands.*;
 
 public class ChatServer {
-    private static Object monitorHistory = new Object();
+    private static final Object historyMonitor = new Object();
     private static ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     private static List<Message> history = null;
@@ -85,7 +85,7 @@ public class ChatServer {
 
         switch (tempMsg.getTypeCommand()) {
             case SEND:
-                broadcastMessage(msg, tempMsg);
+                broadcastMessageAndSaveToHistory(msg, tempMsg);
                 break;
             case HISTORY:
                 sendHistory(outputStream);
@@ -102,8 +102,8 @@ public class ChatServer {
         }
     }
 
-    private static void broadcastMessage(String msg, Message tempMsg) {
-        synchronized (monitorHistory) {
+    private static void broadcastMessageAndSaveToHistory(String msg, Message tempMsg) {
+        synchronized (historyMonitor) {
             history.add(tempMsg);
             try {
                 HistorySaver.getInstance().addToFile(tempMsg);
@@ -113,22 +113,25 @@ public class ChatServer {
         }
 
         final String finalMsg = msg;
-        executorService.submit(() -> clientSockets.keySet().forEach(socket -> {
+
+        clientSockets.keySet().forEach(socket -> {
             try {
                 dataOutStr.get(socket).writeUTF(finalMsg);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }));
+        });
     }
 
-    private static synchronized void sendHistory(DataOutputStream outputStream) {
-        history.forEach(message -> {
-            try {
-                outputStream.writeUTF(message.getFormattingMessage());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+    private static void sendHistory(DataOutputStream outputStream) {
+        synchronized (historyMonitor) {
+            history.forEach(message -> {
+                try {
+                    outputStream.writeUTF(message.getFormattingMessage());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 }
