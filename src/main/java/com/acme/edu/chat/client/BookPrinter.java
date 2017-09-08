@@ -20,7 +20,7 @@ public class BookPrinter {
             BookPrinter bookPrinter = new BookPrinter(currentServerSocket);
             bookPrinter.start();
         } catch (IOException e) {
-            System.out.println("Book printer goes wrong! We cant't say <<all right>>!");
+            System.out.println("Book printer has stopped");
         }
     }
 
