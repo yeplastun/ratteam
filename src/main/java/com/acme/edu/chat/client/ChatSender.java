@@ -36,6 +36,11 @@ public class ChatSender implements Runnable {
                     message = consoleInput.readLine().trim();
                     continue;
                 }
+                if ((message.equals(SEND_COMMAND) || message.equals(CHANGE_ID_COMMAND))) {
+                    System.out.println("Message can't be empty");
+                    message = consoleInput.readLine().trim();
+                    continue;
+                }
 
                 outputStream.writeUTF(message);
                 message = consoleInput.readLine().trim();

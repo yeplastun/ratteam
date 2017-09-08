@@ -11,11 +11,13 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.acme.edu.chat.Commands.INVALID_COMMAND;
 
 public class ChatServer {
-    private final Object historyMonitor = new Object();
+    private final ReadWriteLock historyLock = new ReentrantReadWriteLock();
     private final Object broadcastMonitor = new Object();
 
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -100,10 +102,10 @@ public class ChatServer {
     }
 
     private void broadcastMessageAndSaveToHistory(Message tempMessage) {
-        synchronized (historyMonitor) {
-            history.add(tempMessage);
-            historySaver.addToFile(tempMessage);
-        }
+        historyLock.writeLock().lock();
+        history.add(tempMessage);
+        historySaver.addToFile(tempMessage);
+        historyLock.writeLock().unlock();
 
         synchronized (broadcastMonitor) {
             clientSockets.keySet().forEach(socket -> {
@@ -117,14 +119,14 @@ public class ChatServer {
     }
 
     private void sendHistory(DataOutputStream outputStream) {
-        synchronized (historyMonitor) {
-            history.forEach(message -> {
-                try {
-                    outputStream.writeUTF(message.getFormattedMessage());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
+        historyLock.readLock().lock();
+        history.forEach(message -> {
+            try {
+                outputStream.writeUTF(message.getFormattedMessage());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        historyLock.readLock().unlock();
     }
 }
