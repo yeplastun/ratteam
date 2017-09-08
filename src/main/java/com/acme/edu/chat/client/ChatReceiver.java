@@ -1,6 +1,5 @@
 package com.acme.edu.chat.client;
 
-import javax.xml.crypto.Data;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -18,8 +17,6 @@ public class ChatReceiver implements Runnable {
     public void run() {
         try {
             while (true) {
-                // System.out.println(inputStream.readUTF());
-                // send to client book
                 outputStream.writeUTF(inputStream.readUTF());
             }
         } catch (IOException e) {
